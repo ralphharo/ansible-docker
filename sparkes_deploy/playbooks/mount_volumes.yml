@@ -1,0 +1,82 @@
+---
+- hosts: all
+  become: true
+
+  vars:
+    mv_mountpoints_playbook:
+      - { device_name: /dev/xvdb, dest: /var/log, filesystem: ext4, opts: noatime }
+    mv_keep_backup: False
+    mv_pre_commands:
+      - service auditd stop
+    mv_services:
+      - rsyslog
+      - auditd
+      - tuned
+    mv_post_commands:
+      - service auditd start
+
+  pre_tasks:
+    - name: Fetch Information about the instance
+      ec2_facts:
+
+    - name: fetch the volumes attached to the instance
+      local_action:
+        module: ec2_vol
+        instance: "{{ instanceId }}"
+        region: "{{ ansible_ec2_placement_region }}"
+        state: list
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      register: volumes
+      become: false
+
+    - name: Set service mount definitions
+      include: "includes/spark.yml"
+
+  roles:
+    - role: ansible-mount-volumes
+      mv_mountpoints: "{{ mv_mountpoints_playbook }}"
+
+  post_tasks:
+    - block:
+      - name: Tag the root volume
+        ec2_tag:
+          region: "{{ ansible_ec2_placement_region }}"
+          resource: "{{ item.id }}"
+          aws_access_key: "{{ aws_access_key }}"
+          aws_secret_key: "{{ aws_secret_key }}"
+          tags:
+            Name: "{{ provision_inventory_fqdn }}-/"
+            MountPoint: "/"
+            AnsibleRef: "{{ cluster_name }}"
+        with_items: "{{ volumes.volumes }}"
+        when: item.attachment_set.device == "/dev/sda1"
+
+      - name: Tag the log volume
+        ec2_tag:
+          region: "{{ ansible_ec2_placement_region }}"
+          resource: "{{ item.id }}"
+          aws_access_key: "{{ aws_access_key }}"
+          aws_secret_key: "{{ aws_secret_key }}"
+          tags:
+            Name: "{{ provision_inventory_fqdn }}-/var/log"
+            MountPoint: "/var/log"
+            AnsibleRef: "{{ cluster_name }}"
+        with_items: "{{ volumes.volumes }}"
+        when: item.attachment_set.device == "/dev/sdb"
+
+      - name: Tag the data volume
+        ec2_tag:
+          region: "{{ ansible_ec2_placement_region }}"
+          resource: "{{ item.id }}"
+          aws_access_key: "{{ aws_access_key }}"
+          aws_secret_key: "{{ aws_secret_key }}"
+          tags:
+            Name: "{{ provision_inventory_fqdn }}-/data"
+            MountPoint: "/data"
+            AnsibleRef: "{{ cluster_name }}"
+        with_items: "{{ volumes.volumes }}"
+        when: item.attachment_set.device in ["/dev/sdd", "/dev/sde"]
+
+      connection: local
+      become: false

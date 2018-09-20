@@ -1,0 +1,42 @@
+########################################################
+# Next few variables before the comment line are usually the only ones you need to change
+cluster_id: "REPLACEME" #(used to identify aws ec2 resources. Use unique values, Example: ralphh-diaas)
+Owner: "REPLACEME@orionhealth.com" # email address of the owner
+Environment: "REPLACEME"  # 'dev', 'test', 'bdaas'
+cluster_name: "{{ cluster_id }}-{{ Environment }}"
+#Set service_to_deploy to spark or elasticsearch. Setting null value deploys both clusters.
+service_to_deploy: spark
+
+#AWS Tags
+PurchaseOrder: XXXX
+ec2_region: "us-west-2"
+CostCenter: XXXX
+Team: 'XXXXXXXXXXX@orionhealth.com'
+auto: "expiry=persistent;stop=0 5 * * *"
+
+#########################################################
+#Keypair
+ec2_keypair: "puppet"
+
+#EC2 variables - This defaults to graviton vpc values
+ec2_ssh_user: "centos"
+ec2_user: "{{ ec2_ssh_user }}"
+ec2_image: "ami-2245ca42"
+
+#VPC variables,  Update subnet id to use - subnet-cab33393 or subnet-d3eda4b6
+ec2_subnet_id: "subnet-cab33393"
+ec2_security_group: "sg-612a8c04"
+
+#Instance Variables
+spark_master_instance_type: "m4.large"
+spark_worker_instance_type: "m4.large"
+
+elastic_master_instance_type: "m4.large"
+elastic_data_instance_type: "m4.large"
+
+volumes:
+  - { device_name: /dev/sda1, volume_size: 15, volume_type: gp2, delete_on_termination: true }
+  - { device_name: /dev/sdd, volume_size: 25, volume_type: gp2, delete_on_termination: true, encrypted: true} #/data
+  - { device_name: /dev/sde, volume_size: 25, volume_type: gp2, delete_on_termination: true, encrypted: true} #/data
+  - { device_name: /dev/sdb, volume_size: 25, volume_type: gp2, delete_on_termination: true, encrypted: true} #/var/log
+    # - { device_name: /dev/sdc, volume_size: 25, volume_type: gp2, delete_on_termination: true, encrypted: true} #/spark

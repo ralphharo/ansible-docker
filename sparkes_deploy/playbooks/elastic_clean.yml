@@ -1,0 +1,18 @@
+---
+- hosts: elasticsearch-ec2
+  become: yes
+  pre_tasks:
+    - ec2_metadata_facts:
+
+    - name: ensure firewalld is disabled
+      include: includes/firewalld_service.yml
+
+  roles:
+    - role: ansible-elasticsearch
+      elasticsearch_jvm_heapsize: "{{ jvm_heapsize_mapping[ansible_facts.ec2_instance_type] }}"
+      elasticsearch_san_domain: "{{ provision_inventory_kerberos_domain }}"
+      elasticsearch_cluster_name: "{{ provision_inventory_ansibleref }}"
+      elasticsearch_private_ip: "{{ provision_inventory_private_ip }}"
+      elasticsearch_hostname: "{{ provision_inventory_hostname }}"
+      elasticsearch_plugin_repository_s3_bucket: "{{ provision_management_vpc_backup_s3_bucket }}"
+      elasticsearch_plugin_repository_s3_region: "{{ provision_inventory_vpc_region }}"

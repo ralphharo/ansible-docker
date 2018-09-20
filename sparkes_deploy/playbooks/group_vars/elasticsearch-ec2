@@ -1,0 +1,16 @@
+---
+provision_inventory_ansibleref: "{{ cluster_name }}"
+elasticsearch_cert_backup_dir: files/elasticsearch
+provision_inventory_region: "{{ aws_region | default(us-west-2) }}"
+provision_inventory_kerberos_domain: odl.io
+elasticsearch_firewalld_enabled: false
+elasticsearch_do_mount: false
+elasticsearch_plugin_repository_s3: false
+public_ip: "{{ provision_inventory_public_ip }}"
+private_ip: "{{ provision_inventory_private_ip }}"
+
+jvm_heapsize_mapping:
+  m4.large: 4g
+  m4.xlarge: 8g
+  m4.2xlarge: 16g
+  m4.4xlarge: 32g

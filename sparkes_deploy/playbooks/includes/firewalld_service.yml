@@ -1,0 +1,11 @@
+---
+
+- name: firewalld stop
+  service:
+    name: firewalld
+    state: stopped
+  become: True
+
+- name: firewalld disable
+  command: systemctl disable firewalld
+  become: True

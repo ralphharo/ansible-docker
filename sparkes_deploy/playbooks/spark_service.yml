@@ -1,0 +1,34 @@
+---
+- name: spark service
+  hosts: spark-ec2
+  become: true
+
+  tasks:
+
+    
+    - name: spark restart
+      service:
+        name: spark
+        state: restarted
+      when: spark_state == 'restart'
+
+    - name: stop spark
+      service:
+        name: spark
+        state: stopped
+      become: True
+      when: spark_state == 'stop'
+
+    - name: start spark
+      service:
+        name: spark
+        state: started
+      become: True
+      when: spark_state == 'start'
+
+    - name: show spark process
+      shell: ps -ef | grep spark
+      register: ps
+
+    - debug:
+        var: ps.stdout_lines

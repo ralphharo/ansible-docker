@@ -1,0 +1,66 @@
+
+# Modify cluster size by adding or removing node definitions. clusterBuilder will loop through these definitions.
+common_tags:
+  CostCenter: "{{ CostCenter }}"
+  Team: "{{ Team }}"
+  Owner: "{{ Owner }}"
+  auto: "{{ auto }}"
+  PurchaseOrder: "{{ PurchaseOrder }}"
+  Environment: "{{ Environment }}"
+
+spark_cluster_name: "{{ cluster_id }}-{{ Environment }}-spark"
+elastic_cluster_name: "{{ cluster_id }}-{{ Environment }}-elastic"
+
+spark_config:
+  - name: "{{ spark_cluster_name }}-master"
+    instance_type: "{{ spark_master_instance_type }}"
+    tags:
+      Name: "{{ spark_cluster_name }}-master"
+      cluster_name: "{{ spark_cluster_name }}"
+      instance_fqdn: "{{ spark_cluster_name }}-master.odl.io"
+      node_type: master
+
+  - name: "{{ cluster_name }}-worker1"
+    instance_type: "{{ spark_worker_instance_type }}"
+    tags:
+      Name: "{{ spark_cluster_name }}-worker1"
+      cluster_name: "{{ spark_cluster_name }}"
+      instance_fqdn: "{{ spark_cluster_name }}-worker1.odl.io"
+      node_type: worker
+
+  - name: "{{ spark_cluster_name }}-worker2"
+    instance_type: "{{ spark_worker_instance_type }}"
+    tags:
+      Name: "{{ spark_cluster_name }}-worker2"
+      cluster_name: "{{ spark_cluster_name }}"
+      instance_fqdn: "{{ spark_cluster_name }}-worker2.odl.io"
+      node_type: worker
+
+elastic_config:
+  - name: "{{ elastic_cluster_name }}-master"
+    instance_type: "{{ elastic_master_instance_type }}"
+    tags:
+      Name: "{{ elastic_cluster_name }}-master"
+      cluster_name: "{{ elastic_cluster_name }}"
+      instance_fqdn: "{{ elastic_cluster_name }}-master.odl.io"
+      node_type: master
+
+  - name: "{{ elastic_cluster_name }}-data1"
+    instance_type: "{{ elastic_data_instance_type }}"
+    tags:
+      Name: "{{ elastic_cluster_name }}-data1"
+      cluster_name: "{{ elastic_cluster_name }}"
+      instance_fqdn: "{{ elastic_cluster_name }}-data2.odl.io"
+      node_type: data
+
+  - name: "{{ elastic_cluster_name }}-data2"
+    instance_type: "{{ elastic_data_instance_type }}"
+    tags:
+      Name: "{{ elastic_cluster_name }}-data2"
+      cluster_name: "{{ elastic_cluster_name }}"
+      instance_fqdn: "{{ elastic_cluster_name }}-data2.odl.io"
+      node_type: data
+
+ec2_configs:
+  spark: "{{ spark_config }}"
+  elasticsearch: "{{ elastic_config }}"

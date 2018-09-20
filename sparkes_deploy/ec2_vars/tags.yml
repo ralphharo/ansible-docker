@@ -1,0 +1,7 @@
+tags:
+  CostCenter: "{{ CostCenter }}"
+  Team: "{{ Team }}"
+  Owner: "{{ Owner }}"
+  PurchaseOrder: "{{ PurchaseOrder }}"
+  Environment: "{{ Environment }}"
+  Customer: "{{ Environment }}"

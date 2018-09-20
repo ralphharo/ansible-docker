@@ -1,0 +1,34 @@
+---
+- name: Fetch Information about the instance
+  ec2_facts:
+  register: instance_information
+
+- name: Add spark data and scratch mountpoints
+  set_fact:
+    spark_mountpoints:
+      - { device_name: /dev/md127, dest: /data, filesystem: ext4, opts: noatime }
+      - { device_name: /dev/xvdc, dest: /spark, filesystem: ext4, opts: noatime }
+
+- name: Add service mountpoints
+  set_fact:
+        mv_mountpoints_playbook: "{{ mv_mountpoints_playbook + spark_mountpoints }}"
+  when:
+    - '"ansible_ec2_block_device_mapping_" in item.key'
+    - item.value == "sdc"
+  with_dict: "{{ instance_information['ansible_facts'] }}"
+
+- debug:
+    var: mv_mountpoints_playbook
+
+- name: tag the spark volume
+  local_action:
+    module: ec2_tag
+    region: "{{ ansible_ec2_placement_region }}"
+    resource: "{{ item.id }}"
+    tags:
+      Name: "{{ provision_inventory_fqdn }}-/spark"
+      MountPoint: "/spark"
+      AnsibleRef: "{{ cluster_name }}"
+  with_items: "{{ volumes.volumes }}"
+  when: item.attachment_set.device == "/dev/sdc"
+  become: false

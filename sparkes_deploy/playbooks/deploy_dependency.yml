@@ -1,0 +1,31 @@
+---
+- hosts: all
+  become: true
+
+  roles:
+    - role: ansible-sysstat
+    - role: ansible-base-os
+    - role: ansible-hardening
+    - role: ansible-common
+    - role: ansible-raid
+      raid_level: "0"
+      raid_device: "/dev/md127"
+      raid_components:
+        - /dev/xvdd
+        - /dev/xvde
+
+  tasks:
+    - name: ensure firewalld is disabled
+      include: includes/firewalld_service.yml
+
+    - name: Restart machine
+      shell: "sleep 5 && sudo shutdown -r now"
+      async: 1
+      poll: 0
+
+    - name: wait for ssh again available.
+      wait_for_connection:
+        connect_timeout: 20
+        sleep: 5
+        delay: 5
+        timeout: 300

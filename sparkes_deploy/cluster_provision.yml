@@ -1,0 +1,85 @@
+- hosts: localhost
+
+  vars:
+    env_vars:
+      - regexp: "cluster_name"
+        line: "export cluster_name={{ cluster_name }}"
+      - regexp: "spark_inventory"
+        line: "export spark_inventory=scripts/inventory/{{ cluster_name }}-spark"
+      - regexp: "elastic_inventory"
+        line: "export elastic_inventory=scripts/inventory/{{ cluster_name }}-elastic"
+
+  tasks:
+    - name: load configuration, tags and aws credentials
+      include_vars: "ec2_vars/{{ item }}.yml"
+      with_items:
+        - environment
+        - tags
+        - clusterConfig
+
+    - name: Setting query facts for single query
+      set_fact:
+        ec2_nodes: "{{ec2_configs[service_to_deploy] if service_to_deploy in ['spark', 'elasticsearch'] else (ec2_configs.spark + ec2_configs.elasticsearch)}}"
+
+    - name: Launch Instance
+      ec2:
+        group_id: "{{ ec2_security_group }}"
+        vpc_subnet_id: "{{ ec2_subnet_id }}"
+        assign_public_ip: yes
+        instance_type: "{{ item.instance_type }}"
+        image: "{{ ec2_image }}"
+        wait: true
+        region: "{{ ec2_region }}"
+        keypair: "{{ ec2_keypair }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        instance_tags: "{{ (item.tags) | combine(common_tags) }}"
+        volumes: "{{ volumes }}"
+      register: ec2
+      with_items: "{{ ec2_nodes }}"
+
+    - name: associate new elastic IPs with each of the instances
+      ec2_eip:
+        instance_id: "{{ item }}"
+        region: "{{ ec2_region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      with_items: "{{ ec2.results | map(attribute='instance_ids') |list }}"
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Get volumes ids
+      ec2_vol:
+        region: "{{ ec2_region }}"
+        instance: "{{ item }}"
+        state: list
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      with_items: "{{ ec2.results | map(attribute='instance_ids') |list }}"
+      register: ec2_volumes
+      loop_control:
+        label: "{{ item }}"
+
+    # Tag all volumes with correct tag
+    - name: Primary Region EC2 | Tag all volumes
+      ec2_tag:
+        region: "{{ ec2_region }}"
+        resource:  "{{ item.id }}"
+        tags: "{{ tags | combine({'Name': cluster_name }) }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      with_items: "{{ ec2_volumes.results | map(attribute='volumes')| list }}"
+      loop_control:
+        label: "{{ item.id }}"
+    - name: wait for instance startup
+      pause:
+        minutes: 1
+
+    - name: Update environment file
+      lineinfile:
+        dest: "ec2_vars/environment"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      connection: local
+      with_items: "{{ env_vars }}"

@@ -1,0 +1,12 @@
+#Environment variables
+#Update these variables
+export shared_volume=
+export dock_image=ansiblecm:2.6.1
+source {path_to_aws_credentials}
+
+#No update required on these variables
+export docker_image=ansible-docker:latest
+export cluster_ssh_key=playbooks/files/puppet_id_rsa
+export spark_inventory=
+export elastic_inventory=
+export cluster_name=

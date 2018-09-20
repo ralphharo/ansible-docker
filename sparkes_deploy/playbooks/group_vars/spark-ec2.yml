@@ -1,0 +1,6 @@
+
+provision_inventory_ansibleref: "{{ cluster_name }}"
+provision_inventory_region: "{{ aws_region | default(us-west-2) }}"
+provision_inventory_kerberos_domain: odl.io
+public_ip: "{{ provision_inventory_public_ip }}"
+private_ip: "{{ provision_inventory_private_ip }}"

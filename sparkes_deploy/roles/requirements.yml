@@ -1,0 +1,27 @@
+---
+# Expressing role dependencies using source locations
+# Use "ansible-galaxy install -r requirements.yml" to install
+
+- src: git+ssh://git@stash:7999/bdaas/ansible-spark-tls.git
+  version: 0.0.13
+
+- src: git+ssh://git@stash:7999/bdaas/ansible-elasticsearch.git
+  version: 0.0.30
+
+- src: git+ssh://git@stash:7999/neb/ansible-common.git
+  version: 0.0.1
+
+- src: git+ssh://git@stash:7999/neb/ansible-sysstat.git
+  version: 0.0.1
+
+- src: git+ssh://git@stash:7999/neb/ansible-base-os.git
+  version: 0.0.3
+
+- src: git+ssh://git@stash:7999/neb/ansible-hardening.git
+  version: 0.0.8
+
+- src: git+ssh://git@stash:7999/bdaas/ansible-raid.git
+  version: 0.0.1
+
+- src: git+ssh://git@stash:7999/neb/ansible-mount-volumes.git
+  version: 0.0.1

@@ -1,0 +1,17 @@
+---
+- name: Perform initial installation of Apache Spark
+  hosts: spark-ec2
+
+  pre_tasks:
+
+    - name: ensure firewalld is disabled
+      include: includes/firewalld_service.yml
+
+  roles:
+    - role: ansible-spark-tls
+      environment_proxy: "http://proxy.service:3128"
+      instance_fqdn : "{{ provision_inventory_fqdn }}"
+      spark_enable_repo_proxy: false
+      node_type: "{{ provision_inventory_role }}"
+      spark_san_domain: "{{ provision_inventory_kerberos_domain }}"
+      local_certificate_dir: "files/spark"
